@@ -73,11 +73,22 @@ router.patch('/:username', authUser, requireLogin, requireAdmin, async function(
       throw new ExpressError('Only  that user or admin can edit a user.', 401);
     }
 
-    // get fields to change; remove token so we don't try to change it
-    let fields = { ...req.body };
-    delete fields._token;
+    // BUG 2
+    //get fields to change; remove token so we don't try to change it
+    // let fields = { ...req.body };
+    // delete fields._token;
 
-    let user = await User.update(req.params.username, fields);
+    //BUG 2 FIX
+     // Filter out only the allowed fields
+     const allowedFields = ['first_name', 'last_name', 'phone', 'email'];
+     let fieldsForUpdate = {};
+     for (let field of allowedFields) {
+       if (req.body.hasOwnProperty(field)) {
+         fieldsForUpdate[field] = req.body[field];
+       }
+     }
+
+    let user = await User.update(req.params.username, fieldsForUpdate);
     return res.json({ user });
   } catch (err) {
     return next(err);

@@ -90,7 +90,17 @@ describe("POST /auth/login", function() {
     expect(username).toBe("u1");
     expect(admin).toBe(false);
   });
+  // TESTS BUG #3 in routes/auth.js
+  test("should not log in with incorrect credentials", async function() {
+    const response = await request(app)
+      .post("/auth/login")
+      .send({ username: "incorrectUser", password: "incorrectPass" });
+    expect(response.statusCode).toBe(401);
+    expect(response.body).not.toHaveProperty("token");
+  });
+
 });
+
 
 describe("GET /users", function() {
   test("should deny access if no token provided", async function() {
@@ -157,6 +167,14 @@ describe("PATCH /users/[username]", function() {
     });
   });
 
+  // TESTS BUG #2 in routes/users.js
+  test("should not allow updating fields other than allowed ones", async function() {
+    const response = await request(app)
+      .patch("/users/u1")
+      .send({ _token: tokens.u1, admin: true });
+    expect(response.statusCode).toBe(401);
+  });
+
   test("should disallowing patching not-allowed-fields", async function() {
     const response = await request(app)
       .patch("/users/u1")
@@ -191,6 +209,16 @@ describe("DELETE /users/[username]", function() {
       .send({ _token: tokens.u3 }); // u3 is admin
     expect(response.statusCode).toBe(200);
     expect(response.body).toEqual({ message: "deleted" });
+  });
+});
+  
+//Bug 1 test:
+describe("Middleware authUser", function () {
+  test("should deny access with an invalid token", async function () {
+    const response = await request(app)
+      .get("/users") // Use a route that requires authentication
+      .send({ _token: "invalidToken" });
+    expect(response.statusCode).toBe(401);
   });
 });
 
