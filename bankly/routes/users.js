@@ -70,7 +70,7 @@ router.patch('/:username', authUser, requireLogin, requireAdmin, async function(
 ) {
   try {
     if (!req.curr_admin && req.curr_username !== req.params.username) {
-      throw new ExpressError('Only  that user or admin can edit a user.', 401);
+      throw new ExpressError('Only that user or admin can edit a user.', 401);
     }
 
     // BUG 2
@@ -111,7 +111,7 @@ router.delete('/:username', authUser, requireAdmin, async function(
   next
 ) {
   try {
-    User.delete(req.params.username);
+    await User.delete(req.params.username);
     return res.json({ message: 'deleted' });
   } catch (err) {
     return next(err);
